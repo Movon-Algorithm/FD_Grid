@@ -6,6 +6,7 @@
 - 모델을 통해 결과를 얻는 방식만 제공했기에 자세한 로직은 프로젝트 진행자들이 구성해야함
 
 ### 필수 설치 패키지 목록
+- install_package.sh 파일을 ./install_packages.sh 명령어로 실행하여 설치를 진행
 - onnx 1.16.1
 - onnxruntime 1.18.1
 - opencv-python 4.7.0.68
