@@ -1,0 +1,3 @@
+thresh : 0.8
+imageSize : [480, 640]
+imageChannel : 1
