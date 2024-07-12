@@ -20,8 +20,13 @@ def preprocess():
 
 def img_size(img):
     # Return size for image & video
-    img_height, img_width = img.shape[:2]
-    return (img_height, img_width)
+   img_height, img_width = img.shape[:2]
+   return (img_height, img_width)
+    # Return size for image & video
+    # img_height, img_width = img.shape[:2]
+    # right_half = img[img_height-300:,img_width // 2:]
+    # img_height, img_width = img.shape[:2]
+    # return (img_height, img_width)
 
 def faceBoxWrite(img_info, img, detections, plotColor = (0, 255, 0), lineThickness = 2):
     # Bbox rectangle Write for image & video
@@ -66,15 +71,52 @@ sess = onnxruntime.InferenceSession(model_path, providers=['CPUExecutionProvider
 faceDetector = FaceBoxesONNXDetector(model_path, faceBoxesCfg_yaml, priorCfg_yaml, 'cpu')
 
 # Model inference Result
-image = cv2.imread('000001.jpg')
-removePadOffset = RemovePadOffset(img_size(image), faceBoxesCfg_yaml['imageSize'])
+#image = cv2.imread('000001.jpg')  
+#removePadOffset = RemovePadOffset(img_size(image), faceBoxesCfg_yaml['imageSize'])
 
-in_img_file = preprocs(image)
-faceDetections = faceDetector.detect(in_img_file)
-faceDetections = removePadOffset(faceDetections)
-Result = faceBoxWrite(img_size(image), image, faceDetections)
+#Model Video Capture
+video_path = 'input_video01.mp4'
+cap = cv2.VideoCapture(video_path)
+output_size = (1280, 720)
+
+# Output video settings
+fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+out = cv2.VideoWriter('output_Cropped_Right_Half.avi', fourcc, 30.0, output_size)
+
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+    img_info = img_size(frame)
+    removePadOffset = RemovePadOffset(img_info, faceBoxesCfg_yaml['imageSize'])
+
+    in_img_file = preprocs(frame)
+    faceDetections = faceDetector.detect(in_img_file)
+
+    #For checking the coordinates
+    print("faceDetections:", faceDetections)
+    print("faceDetections shape:", faceDetections.shape)
+    
+    #Skip frames that were not detected
+    if faceDetections.size != 0:     
+        faceDetections = removePadOffset(faceDetections)
+    
+    #Resizing video 
+    result_frame = faceBoxWrite(img_info, frame, faceDetections)
+    result_frame_resized = cv2.resize(result_frame, output_size)
+
+    out.write(result_frame_resized)
+    cv2.imshow("FaceBoxDetection Frame", result_frame_resized)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):  # Wait for the 'q' key to exit
+        break
+# in_img_file = preprocs(img)
+# faceDetections = faceDetector.detect(in_img_file)
+# faceDetections = removePadOffset(faceDetections)
+#Result = faceBoxWrite(img_size(image), image, faceDetections)
 
 # Show Result
-cv2.imshow("Detected Faces", Result)
-cv2.waitKey(0)
+cap.release()
+out.release()
 cv2.destroyAllWindows()
