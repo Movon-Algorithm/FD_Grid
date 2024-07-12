@@ -36,16 +36,16 @@ def faceBoxWrite(img_info, img, detections, plotColor=(0, 255, 0), lineThickness
         bbox[3] = int(bbox[3] * height) + height_offset
 
         bbox = bbox.astype(int)
-        cv2.rectangle(img,
-                      (bbox[0], bbox[1]),
-                      (bbox[2], bbox[3]),
-                      plotColor, lineThickness)
-        cv2.putText(img,
-                    "face" + " : {0:.2f}".format(detection[1]),
-                    (bbox[0], bbox[1] - 10),
-                    cv2.FONT_ITALIC,
-                    color=plotColor,
-                    fontScale=0.5)
+        cv2.rectangle(img, 
+                    (int(bbox[0]), int(bbox[1])), 
+                    (int(bbox[2]), int(bbox[3])), 
+                    plotColor, lineThickness)
+        cv2.putText(img, 
+                    "face" + " : {0:.2f}".format(detection[1]), 
+                    (bbox[0], bbox[1]), 
+                    cv2.FONT_ITALIC, 
+                    color = plotColor, 
+                    fontScale = 0.5)
         
         print("face" + " : {0:.2f}".format(detection[1]))
     return img
@@ -67,7 +67,7 @@ sess = onnxruntime.InferenceSession(model_path, providers=['CPUExecutionProvider
 faceDetector = FaceBoxesONNXDetector(model_path, faceBoxesCfg_yaml, priorCfg_yaml, 'cpu')
 
 # Model Video Capture
-video_path = 'input_video01.mp4'
+video_path = 'input_video03.mp4'
 cap = cv2.VideoCapture(video_path)
 output_size = (1280, 720)
 
@@ -76,8 +76,13 @@ fourcc = cv2.VideoWriter_fourcc(*'DIVX')
 out = cv2.VideoWriter('output01_Cropping.avi', fourcc, 30.0, output_size)
 
 # Crop coordinates
-x_start, x_end = 1000, 1700
-y_start, y_end = 320, 1080
+x_start, x_end = 700, 1100 
+y_start, y_end = 100, 600
+
+#01 NFD = 5 ((1000,1700),(320,1080)) // NFD = 4 ((1000,1700),(200,1080)) // NFD = 2 ((900,1700),(200,1080))
+#02 NFD = 3 ((1000,1700),(200,1080))
+#03 NFD = 0 ((700,1100),(100,600))
+#04 NFD = 3 ((700,1100),(0,600))
 
 count = 0
 failed_frames = []  # List to store frame numbers where detection failed

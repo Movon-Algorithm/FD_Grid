@@ -11,7 +11,7 @@ def get_coordinates(event, x, y, flags, param):
         cv2.imshow("Video", frame)
 
 # Capture video from file or webcam
-video_path = 'input_video01.mp4'  # Use '0' for webcam
+video_path = 'input_video04.mp4'  # Use '0' for webcam
 cap = cv2.VideoCapture(video_path)
 
 # Check if the video capture is initialized
@@ -35,7 +35,7 @@ while True:
         break
 
     # Resize the frame to 1280x720
-    frame = cv2.resize(frame, (1920, 1080))
+    frame = cv2.resize(frame, (1280, 720))
 
     # Display the resulting frame
     cv2.imshow("Video", frame)
