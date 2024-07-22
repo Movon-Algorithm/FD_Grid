@@ -52,10 +52,17 @@ def process_video(video_file, faceDetector, preprocs, faceBoxesCfg_yaml):
     log_filename = f'face_detection_confidence_{os.path.basename(video_file)}.txt'
     display_size = (640, 480)
 
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    duration = frame_count / fps
+    logging.info(f"Total frames: {frame_count}, FPS: {fps}, Duration: {duration}s")
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
-            break
+            total_frames += 1  # Increment total frames even if reading failed
+            logging.warning(f"Frame {total_frames} could not be read.")
+            continue  # Skip this frame if read fails
 
         total_frames += 1
         original_frame = frame.copy()
@@ -90,7 +97,7 @@ def process_video(video_file, faceDetector, preprocs, faceBoxesCfg_yaml):
 
     if confidences:
         avg_confidence = sum(confidences) / len(confidences)
-        detection_rate = detected_frames / total_frames
+        detection_rate = detected_frames / total_frames if total_frames > 0 else 0
         with open(log_filename, 'a') as f:
             f.write(f"\nAverage detection confidence: {avg_confidence:.2f}\n")
             f.write(f"Detection rate: {detection_rate:.2%} ({detected_frames}/{total_frames} frames)\n")
