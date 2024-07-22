@@ -2,11 +2,28 @@ import onnxruntime
 import numpy as np
 import cv2
 import yaml
-
 import torchvision.transforms as transforms
 from FaceBoxesV2.faceBoxesV2_detector_onnx import *
 from FaceBoxesV2.transforms import *
 
+def adjust_contrast_brightness(img, contrast=1.0, brightness=0):
+    # Adjust the contrast and brightness of the image
+    img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
+    return img
+
+def apply_clahe(img):
+    # Convert to YCrCb color space
+    ycrcb_img = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+    y_channel, cr, cb = cv2.split(ycrcb_img)
+
+    # Apply CLAHE to the Y channel
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    y_channel = clahe.apply(y_channel)
+
+    # Merge the channels back
+    ycrcb_img = cv2.merge((y_channel, cr, cb))
+    img = cv2.cvtColor(ycrcb_img, cv2.COLOR_YCrCb2BGR)
+    return img
 
 def preprocess():
     # Preprocess for image & video
@@ -46,7 +63,7 @@ def faceBoxWrite(img_info, img, detections, plotColor=(0, 255, 0), lineThickness
                     cv2.FONT_ITALIC, 
                     color = plotColor, 
                     fontScale = 0.5)
-        
+        # if detection[1] < 0.95:
         print("face" + " : {0:.2f}".format(detection[1]))
     return img
 
@@ -67,7 +84,7 @@ sess = onnxruntime.InferenceSession(model_path, providers=['CPUExecutionProvider
 faceDetector = FaceBoxesONNXDetector(model_path, faceBoxesCfg_yaml, priorCfg_yaml, 'cpu')
 
 # Model Video Capture
-video_path = 'input_video03.mp4'
+video_path = 'input_video01.mp4'
 cap = cv2.VideoCapture(video_path)
 output_size = (1280, 720)
 
@@ -76,16 +93,14 @@ fourcc = cv2.VideoWriter_fourcc(*'DIVX')
 out = cv2.VideoWriter('output01_Cropping.avi', fourcc, 30.0, output_size)
 
 # Crop coordinates
-x_start, x_end = 700, 1100 
-y_start, y_end = 100, 600
-
-#01 NFD = 5 ((1000,1700),(320,1080)) // NFD = 4 ((1000,1700),(200,1080)) // NFD = 2 ((900,1700),(200,1080))
-#02 NFD = 3 ((1000,1700),(200,1080))
-#03 NFD = 0 ((700,1100),(100,600))
-#04 NFD = 3 ((700,1100),(0,600))
+x_start, x_end = 900, 1700 
+y_start, y_end = 200, 1080
 
 count = 0
 failed_frames = []  # List to store frame numbers where detection failed
+
+count2 = 0
+low_precision_frames =[]
 
 frame_number = 0  # Initialize frame number
 while cap.isOpened():
@@ -95,6 +110,13 @@ while cap.isOpened():
     
     frame_number += 1  # Increment frame number
     
+    # Adjust contrast and brightness
+    frame = adjust_contrast_brightness(frame, contrast=1, brightness=-50) #a=1, b=-8~-20(1) / a=1, b=-30(0)
+    frame = apply_clahe(frame)
+    # gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # enhanced_frame = apply_clahe(gray_frame)
+    # frame = cv2.cvtColor(enhanced_frame, cv2.COLOR_GRAY2BGR)
+
     # Crop the frame using the specified coordinates
     cropped_frame, width_offset, height_offset = crop_img(frame, x_start, x_end, y_start, y_end)
     img_info = (cropped_frame.shape[0], cropped_frame.shape[1], width_offset, height_offset)
@@ -107,6 +129,10 @@ while cap.isOpened():
     # Skip frames that were not detected
     if faceDetections.size != 0:
         faceDetections = removePadOffset(faceDetections)
+        for detection in faceDetections:
+            if detection[1] < 0.95:
+                count2 += 1
+                low_precision_frames.append(frame_number)
     else:
         count += 1
         failed_frames.append(frame_number)  # Store the frame number
@@ -115,16 +141,18 @@ while cap.isOpened():
     result_frame = faceBoxWrite(img_info, frame, faceDetections)
     result_frame_resized = cv2.resize(result_frame, output_size)
 
-    out.write(result_frame_resized)
+    #out.write(result_frame_resized)
     cv2.imshow("FaceBoxDetection Frame", result_frame_resized)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):  # Wait for the 'q' key to exit
+    if cv2.waitKey(100) & 0xFF == ord('q'):  # Wait for the 'q' key to exit
         break
 
 # Print the Number of not detected frames    
 print("Not detected Frames: ", count)
 print("Frames where face detection failed: ", failed_frames)
 
+print("Low precision Frames: ", count2)
+print("Frames where face detection has low precision: ", low_precision_frames)
 # Show Result
 cap.release()
 out.release()
