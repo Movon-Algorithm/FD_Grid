@@ -76,8 +76,8 @@ video_path = 'input_video04.mp4'
 cap = cv2.VideoCapture(video_path)
 output_size = (1280, 720)
 
-fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-out = cv2.VideoWriter('output01_Cropping.avi', fourcc, 30.0, output_size)
+fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+out = cv2.VideoWriter('output_video04.mp4', fourcc, 30.0, output_size)
 
 x_start, x_end = 700, 1100 
 y_start, y_end = 0, 650

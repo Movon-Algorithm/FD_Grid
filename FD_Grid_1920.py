@@ -76,8 +76,8 @@ video_path = 'input_video01.mp4'
 cap = cv2.VideoCapture(video_path)
 output_size = (1280, 720)
 
-fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-out = cv2.VideoWriter('output01_Cropping.avi', fourcc, 30.0, output_size)
+fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+out = cv2.VideoWriter('output_video01.mp4', fourcc, 30.0, output_size)
 
 x_start, x_end = 900, 1700 
 y_start, y_end = 200, 1080
@@ -126,8 +126,16 @@ while cap.isOpened():
     out.write(result_frame_resized)
     cv2.imshow("FaceBoxDetection Frame", result_frame_resized)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord('q'):
         break
+    elif key == ord('p'):
+        while True:
+            key2 = cv2.waitKey(1) & 0xFF
+            if key2 == ord('p') or key2 == ord('q'):
+                break
+        if key2 == ord('q'):
+            break
 
 print("Not detected Frames: ", count)
 print("Frames where face detection failed: ", failed_frames)
