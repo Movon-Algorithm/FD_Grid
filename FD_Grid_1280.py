@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 from FaceBoxesV2.faceBoxesV2_detector_onnx import *
 from FaceBoxesV2.transforms import *
 
-def adjust_contrast_brightness(img, contrast=1.0, brightness=0):
+def Contrast_frame(img, contrast=1.0, brightness=0):
     img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
     return img
 
@@ -98,7 +98,7 @@ while cap.isOpened():
     
     original_frame = frame.copy()  # Store the original frame
 
-    frame = adjust_contrast_brightness(frame, contrast=1, brightness=-42)
+    frame = Contrast_frame(frame, contrast=1, brightness=-42)
     frame = apply_clahe(frame)
 
     cropped_frame, width_offset, height_offset = crop_img(frame, x_start, x_end, y_start, y_end)
