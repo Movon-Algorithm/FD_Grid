@@ -144,7 +144,7 @@ while cap.isOpened():
     #out.write(result_frame_resized)
     cv2.imshow("FaceBoxDetection Frame", result_frame_resized)
 
-    if cv2.waitKey(100) & 0xFF == ord('q'):  # Wait for the 'q' key to exit
+    if cv2.waitKey(1) & 0xFF == ord('q'):  # Wait for the 'q' key to exit
         break
 
 # Print the Number of not detected frames    
