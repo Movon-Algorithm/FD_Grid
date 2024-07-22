@@ -72,15 +72,15 @@ onnxruntime.get_device()
 sess = onnxruntime.InferenceSession(model_path, providers=['CPUExecutionProvider'])
 faceDetector = FaceBoxesONNXDetector(model_path, faceBoxesCfg_yaml, priorCfg_yaml, 'cpu')
 
-video_path = 'input_video01.mp4'
+video_path = 'input_video02.mp4'
 cap = cv2.VideoCapture(video_path)
-output_size = (1280, 720)
+output_size = (1920, 1080)
 
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')
 out = cv2.VideoWriter('output_video01.mp4', fourcc, 30.0, output_size)
 
-x_start, x_end = 900, 1700 
-y_start, y_end = 200, 1080
+x_start, x_end = 1080, 1560 
+y_start, y_end = 200, 840
 
 count = 0
 failed_frames = [] 

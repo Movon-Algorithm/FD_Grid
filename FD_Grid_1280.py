@@ -79,8 +79,8 @@ output_size = (1280, 720)
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')
 out = cv2.VideoWriter('output_video04.mp4', fourcc, 30.0, output_size)
 
-x_start, x_end = 700, 1100 
-y_start, y_end = 0, 650
+x_start, x_end = 660, 1140
+y_start, y_end = 0, 640
 
 count = 0
 failed_frames = [] 
