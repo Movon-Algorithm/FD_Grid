@@ -1,4 +1,4 @@
-#240722 #ShinDaYeon #FD grid Project
+#240723 #ShinDaYeon #FD grid Project
 
 import onnxruntime
 import numpy as np
@@ -87,10 +87,10 @@ sess = onnxruntime.InferenceSession(model_path, providers=['CPUExecutionProvider
 faceDetector = FaceBoxesONNXDetector(model_path, faceBoxesCfg_yaml, priorCfg_yaml, 'cpu')
 
 # video number
-video1 = '20230820_082819_NOR_ch1'
+video4 = '20230820_082819_NOR_ch1'
 video2 = '20230820_233653_NOR_ch1'
 video3 = 'Light_20230803_084717_NOR_ch1'
-video4 = 'Light_20230803_084738_NOR_ch1'
+video1 = 'Light_20230803_084738_NOR_ch1'
 
 for i in [video1, video2, video3, video4]: #iterate each video
     video = cv2.VideoCapture(f"{i}.mp4")
@@ -131,7 +131,7 @@ for i in [video1, video2, video3, video4]: #iterate each video
 
         # fps = video.get(cv2.CAP_PROP_FPS) #fps = 30.0
         # delay = int(1000/fps)
-        if cv2.waitKey(25) == ord('q'): #waitKey 안의 숫자(delay) 변경하여도 속도 변화 없음 #coumpert 속도 성능때문이라고 추측
+        if cv2.waitKey(25) == ord('q'): #waitKey 안의 숫자(delay) 변경하여도 속도 변화 없음 #computer 속도 성능때문이라고 추측
             print("q키를 눌러, 동영상 종료됨")
             break
 
@@ -145,6 +145,6 @@ for i in [video1, video2, video3, video4]: #iterate each video
     print(f"average of confi: {sum_of_confi/fd_count: .3f}, fd_count: {fd_count}, fd_pass: {fd_pass}, percent of detect frame:{(fd_count/(fd_count+fd_pass))*100: .3f}%")
     print(f"The size of grid: {crop(image)[5]}/{orig_area}, percent of grid area: {crop(image)[5]/orig_area*100:.3f}%, starting point: {crop(image)[3], crop(image)[1]}")
     print(' ')
-    # print(f"print fps(ms) {video.get(cv2.CAP_PROP_FPS)}ms\n") #렌 = 30.0
+    # print(f"print fps(ms) {video.get(cv2.CAP_PROP_FPS)}ms\n") #fps = 30.0
     video.release()
     cv2.destroyAllWindows()
