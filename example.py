@@ -25,12 +25,6 @@ def img_size(img):
     img_height, img_width = img.shape[:2]
     return img_height, img_width
 
-def adjust_brightness_contrast(image):
-    alpha = 1.5  # Contrast control (1.0-3.0)
-    beta = 50   # Brightness control (0-100)
-    adjusted = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
-    return adjusted
-
 def faceBoxWrite(img_info, img, detections, confidences, plotColor=(0, 255, 0), lineThickness=2):
     height, width = img_info
     for detection in detections:
@@ -68,42 +62,49 @@ def process_video(video_file, faceDetector, preprocs, faceBoxesCfg_yaml):
     confidences = []
     video_filename = os.path.basename(video_file)
     log_filename = f'face_detection_confidence_{video_filename}.txt'
+    
+    total_frames = 0
+    detected_frames = 0
 
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    
     if cap.isOpened():
-        while True:
+        for _ in range(frame_count):
             ret, frame = cap.read()
-            if ret:
-                img_info = img_size(frame)
-                removePadOffset = RemovePadOffset(img_info, faceBoxesCfg_yaml['imageSize'])
+            if not ret:
+                break
 
-                # Adjust brightness and contrast
-                frame = adjust_brightness_contrast(frame)
+            total_frames += 1
+            img_info = img_size(frame)
+            removePadOffset = RemovePadOffset(img_info, faceBoxesCfg_yaml['imageSize'])
 
-                in_frame = frame.copy()
-                for proc in preprocs:
-                    in_frame = proc(in_frame)
-                
-                faceDetections = faceDetector.detect(in_frame)
-                if faceDetections.size > 0:
-                    faceDetections = removePadOffset(faceDetections)
-                    
-                    faceBoxWrite(img_info, frame, faceDetections, confidences)
+            in_frame = frame.copy()
+            for proc in preprocs:
+                in_frame = proc(in_frame)
+            
+            faceDetections = faceDetector.detect(in_frame)
+            if faceDetections.size > 0:
+                detected_frames += 1
+                faceDetections = removePadOffset(faceDetections)
+                faceBoxWrite(img_info, frame, faceDetections, confidences)
 
-                cv2.imshow('Detected Faces', frame)
-                if cv2.waitKey(25) & 0xFF == ord('q'):
-                    break
-            else:
+            # Display original frame with detections
+            cv2.imshow('Detected Faces', frame)
+            if cv2.waitKey(25) & 0xFF == ord('q'):
                 break
 
     cap.release()
     cv2.destroyAllWindows()
 
-    # Calculate and log the average confidence
+    # Calculate and log the average confidence and detection rate
     if confidences:
         avg_confidence = sum(confidences) / len(confidences)
+        detection_rate = detected_frames / total_frames if total_frames > 0 else 0
         with open(log_filename, 'a') as f:
             f.write(f"\nAverage detection confidence: {avg_confidence:.2f}\n")
+            f.write(f"Detection rate: {detection_rate:.2%} ({detected_frames}/{total_frames} frames)\n")
         logging.info(f"Average detection confidence: {avg_confidence:.2f}")
+        logging.info(f"Detection rate: {detection_rate:.2%} ({detected_frames}/{total_frames} frames)")
 
     return log_filename
 
