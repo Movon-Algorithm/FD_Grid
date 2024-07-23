@@ -32,8 +32,13 @@ def faceBoxWrite(img_info, img, detections, confidences, plotColor=(0, 255, 0), 
     for detection in detections:
         bbox = detection[2:] * [width, height, width, height]
         bbox = bbox.astype(int)
+        
+        # Draw bounding box
         cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), plotColor, lineThickness)
-        cv2.putText(img, f"face: {detection[1]:.2f}", (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, plotColor, 2)
+        
+        # Draw confidence text
+        cv2.putText(img, f"Confidence: {detection[1]:.2f}", (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, plotColor, 2)
+        
         confidences.append(detection[1])
         logging.info(f"Detection confidence: {detection[1]}")
     return img
@@ -76,9 +81,14 @@ def process_video(video_file, faceDetector, preprocs, faceBoxesCfg_yaml):
 
         total_frames += 1
         img_info = img_size(frame)
+        img_height, img_width = img_info
         removePadOffset = RemovePadOffset(img_info, faceBoxesCfg_yaml['imageSize'])
 
-        in_frame = frame.copy()
+        # Select the right half of the frame
+        right_half = frame[:, img_width // 2:]
+
+        # Preprocess and detect faces in the right half
+        in_frame = right_half.copy()
         for proc in preprocs:
             in_frame = proc(in_frame)
         
@@ -91,13 +101,17 @@ def process_video(video_file, faceDetector, preprocs, faceBoxesCfg_yaml):
         if faceDetections.size > 0:
             detected_frames += 1
             faceDetections = removePadOffset(faceDetections)
-            faceBoxWrite(img_info, frame, faceDetections, confidences)
+            
+            # Adjust bounding boxes to the original image size
+            faceDetections[:, [0, 2]] += img_width // 2  # Shift bounding boxes back to the original image
+            frame_with_boxes = faceBoxWrite(img_info, frame, faceDetections, confidences)
             logging.info(f"Frame {total_frames}: Detected {len(faceDetections)} faces.")
         else:
             logging.info(f"Frame {total_frames}: No faces detected.")
+            frame_with_boxes = frame  # No detection, use the original frame
 
         # Display original frame with detections
-        cv2.imshow('Detected Faces', frame)
+        cv2.imshow('Detected Faces', frame_with_boxes)
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break
 
@@ -143,4 +157,3 @@ for video_file in video_files:
 # Open all log files at once
 for log_file in log_files:
     os.system(f'start notepad.exe "{log_file}"')
-
